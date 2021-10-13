@@ -1,0 +1,17 @@
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+featureGates:
+  IPv6DualStack: true
+# networking:
+#   podSubnet: 10.244.0.0/16,2001:db8:42:0::/56
+#   serviceSubnet: 10.96.0.0/16,2001:db8:42:1::/112
+# ---
+# apiVersion: kubeadm.k8s.io/v1beta3
+# kind: InitConfiguration
+# localAPIEndpoint:
+#   advertiseAddress: "10.100.0.1"
+#   bindPort: 6443
+# nodeRegistration:
+#   kubeletExtraArgs:
+#     node-ip: 10.100.0.2,fd00:1:2:3::2
