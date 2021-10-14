@@ -1,0 +1,10 @@
+apiVersion: purelb.io/v1
+kind: ServiceGroup
+metadata:
+  name: default
+  namespace: purelb
+spec:
+  local:
+    subnet: '2806:2f0:93c0:4e98::/64'
+    pool: '2806:2f0:93c0:4e98::-2806:2f0:93c0:4e98::ffff'
+    aggregation: default

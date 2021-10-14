@@ -29,10 +29,7 @@ metadata:
     app: nginx
 spec:
   ipFamilyPolicy: PreferDualStack
-  ipFamilies:
-  - IPv6
-  - IPv4
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: nginx
   ports:
