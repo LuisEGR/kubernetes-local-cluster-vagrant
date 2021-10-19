@@ -35,6 +35,7 @@ Vagrant.configure("2") do |config|
      vb.memory = "4096"
      vb.cpus = "2"
   end
+  config.vm.provision "file", source: "./kube_ps1_custom.sh", destination: "kube_ps1_custom.sh"
 
   config.vm.provision "file", source: "./calico.yaml", destination: "calico.yaml"
   config.vm.provision "file", source: "./kubeadm-config.yaml", destination: "kubeadm-config.yaml"

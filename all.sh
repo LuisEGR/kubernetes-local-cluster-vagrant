@@ -58,6 +58,7 @@ sudo apt-get install -y systemd >/dev/null 2>&1
 
 
 
+
 # echo ">>>>>>>>> Installing Containerd"
 # sudo apt-get install libseccomp2
 # wget -q https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz
@@ -146,9 +147,9 @@ apt-mark hold kubelet kubeadm kubectl
 
 NODE_IP=$(hostname -I | cut -d' ' -f2)
 # sudo sed "s/127.0.0.1.*m/$NODE_IP m/" -i /etc/hosts
-echo "${NODE_IP} masterk8s" >> /etc/hosts
-echo "masterk8s" > /etc/hostname
-hostnamectl set-hostname masterk8s
+echo "${NODE_IP} k8s-master" >> /etc/hosts
+echo "k8s-master" > /etc/hostname
+hostnamectl set-hostname k8s-master
 
 echo "IP::::"$NODE_IP
 hostname -i
@@ -211,4 +212,9 @@ ip addr
 
 # echo "HOME:::::::"$HOME
 
+sudo apt-get install -y zsh
+sudo apt-get install -y git-core
+
+yes|sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+sudo chsh -s /bin/zsh vagrant
 
