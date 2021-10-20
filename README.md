@@ -21,6 +21,11 @@ Docker is replaced in favor of containerd since Docker is depercated since k8s@1
 - At least 8Gb RAM available
 - At least 4vCPU avaliable
 
+if running on windows:
+```bash
+git config --global core.autocrlf false
+```
+
 ---
 ## Install
 

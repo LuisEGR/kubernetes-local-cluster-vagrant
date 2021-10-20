@@ -43,6 +43,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "file", source: "./nginx.yaml", destination: "nginx.yaml"
   config.vm.provision "file", source: "./metallb-cfg.yaml", destination: "metallb-cfg.yaml"
   config.vm.provision "file", source: "./metrics-server.yaml", destination: "metrics-server.yaml"
+  config.vm.provision "file", source: "./nginx-ingress.yaml", destination: "nginx-ingress.yaml"
 
   config.vm.provision "shell", path: "all.sh"
   config.vm.provision "shell", path: "user.sh", privileged: false
