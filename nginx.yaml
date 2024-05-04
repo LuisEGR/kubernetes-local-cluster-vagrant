@@ -28,10 +28,6 @@ metadata:
   labels:
     app: nginx
 spec:
-  ipFamilyPolicy: PreferDualStack
-  ipFamilies:
-  - IPv6
-  - IPv4
   type: NodePort
   selector:
     app: nginx
