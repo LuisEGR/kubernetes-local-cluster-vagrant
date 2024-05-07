@@ -1,0 +1,12 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: stable
+controlPlaneEndpoint: "LOAD_BALANCER_DNS"
+networking:
+  podSubnet: 10.14.0.0/16
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: "LOAD_BALANCER_DNS"
+  bindPort: 6443
