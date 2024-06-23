@@ -7,7 +7,7 @@
 
 echo ">>>>>>>>> Installing prerequisites"
 # Install packages to allow apt to use a repository over HTTPS.
-apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common --fix-missing
 sudo apt install -y net-tools --fix-missing
 sudo apt install -y zsh
 yes|sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -185,7 +185,7 @@ sudo apt-mark hold kubelet kubeadm kubectl
 sudo systemctl enable --now kubelet
 
 
- sudo systemctl status kubelet
+sudo systemctl status kubelet
 
 # # Turn off swap for kubeadm.
 sudo swapoff -a
@@ -238,11 +238,11 @@ echo ">>>>>>>>> Installing Kubernetes"
 
 
 
-sed -i "s/LOAD_BALANCER_DNS/$NODE_IP/g" kubeadm-config.yaml
+sed -i "s/LOAD_BALANCER_DNS/$NODE_IP/g" common/kubeadm-config.yaml
 echo ">>>kubeadm-config.yam<<<"
-cat kubeadm-config.yaml
+cat common/kubeadm-config.yaml
 
-kubeadm init --config=kubeadm-config.yaml
+kubeadm init --config=common/kubeadm-config.yaml
 # kubeadm init
 echo ">>>>>>>>> preparing kubectl"
 
@@ -265,3 +265,14 @@ ip addr
 
 # sudo su - vagrant
 # whoami
+
+
+# HELM installation
+# https://helm.sh/docs/intro/install/
+curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+sudo apt-get install apt-transport-https --yes
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt-get update
+sudo apt-get install helm
+
+helm --help

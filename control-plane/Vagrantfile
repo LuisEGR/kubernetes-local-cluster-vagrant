@@ -6,19 +6,32 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder "./shared_drive", "/vagrant", type: "rsync",
     rsync__exclude: ".git/"
 
-  config.vm.define "admin" do |web|
+  config.vm.define "control-plane" do |web|
     config.vm.box = "generic/ubuntu2204"
-    config.vm.network "public_network", bridge: "Public Switch", use_dhcp_assigned_default_route: true
-    config.vm.provider "hyperv" do |vb|
+    # config.vm.network "public_network", 
+    #   bridge: "Public Switch",
+    #   auto_config: false
+
+    config.vm.network "public_network", 
+      ip: "192.168.2.120", 
+      dhcp: false,
+      bridge: "Public Switch"
+
+    # default router
+    # config.vm.provision "shell",
+    #   run: "always",
+    #   inline: "route add default gw 192.168.2.1"
+
+
+    config.vm.provider "hypervivf" do |vb|
       # Customize the amount of memory on the VM:
       vb.maxmemory = "4096"
       vb.memory = "2048"
       vb.cpus = "2"
     end
 
-    config.vm.provision "file", source: "../common/calico.yaml", destination: "calico.yaml"
-    config.vm.provision "file", source: "../common/kubeadm-config.yaml", destination: "kubeadm-config.yaml"
-    config.vm.provision "file", source: "../common/nginx.yaml", destination: "nginx.yaml"
+    config.vm.provision "file", source: "../common", destination: "common"
+    config.vm.provision "file", source: "../test-apps", destination: "test-apps"
 
     config.vm.provision "shell", path: "install.sh", keep_color: true
     config.vm.provision "shell", path: "configure.sh", privileged: false, keep_color: true

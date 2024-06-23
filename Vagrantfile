@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/vagrant", type: "smb"
   config.vm.define "admin" do |web|
     config.vm.box = "generic/ubuntu2204"
-    config.vm.network "public_network", bridge: "Public Switch", use_dhcp_assigned_default_route: true
+    # config.vm.network "public_network", bridge: "Public Switch", use_dhcp_assigned_default_route: true
     config.vm.provider "hyperv" do |vb|
       # Customize the amount of memory on the VM:
       vb.maxmemory = "4096"
@@ -22,9 +22,9 @@ Vagrant.configure("2") do |config|
 
     config.vm.provision "shell", path: "all.sh"
     config.vm.provision "shell", path: "user.sh", privileged: false
-    # config.vm.provision "shell", path: "containerd_prereq.sh"
-# #   config.vm.provision "shell", path: "install.sh"
-# #   config.vm.provision "shell", path: "configure.sh"
+    config.vm.provision "shell", path: "containerd_prereq.sh"
+    config.vm.provision "shell", path: "install.sh"
+    config.vm.provision "shell", path: "configure.sh"
   end
 
 

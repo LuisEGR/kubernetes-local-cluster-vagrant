@@ -11,6 +11,7 @@ echo ">>>>>>>>> Untaint node"
 
 
 # Untaint control plane node.
+# So it can run pods as well
 kubectl taint nodes control-plane node-role.kubernetes.io/control-plane:NoSchedule-
 
 # Display nodes
@@ -18,7 +19,7 @@ kubectl get no -o wide
 
 
 # CNI
-kubectl apply -f calico.yaml
+kubectl apply -f common/calico.yaml
 # kubectl apply -f flannel.yaml
 
 
@@ -51,7 +52,6 @@ echo "Calico pod is ready!"
 # # IPv6 Egress
 #kubectl apply -f ip-masq-agent.yaml
 
-
 # curl -L --remote-name-all https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz{,.sha256sum}
 # sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
 # sudo tar xzvfC cilium-linux-amd64.tar.gz /usr/local/bin
@@ -60,11 +60,8 @@ echo "Calico pod is ready!"
 # cilium install
 # sudo apt install kubectx
 
-
-
 # Validate IPV6 cluster
 # kubectl get nodes masterk8s -o go-template --template='{{range .spec.podCIDRs}}{{printf "%s\n" .}}{{end}}'
-
 
 # kubectl config set-context admin --user=cluster-admin --namespace=kube-system
 
@@ -120,9 +117,34 @@ echo "Calico pod is ready!"
 
 
 
+# TODO: Metallb is not working!
+# Pre-requisite for METALLB
+# https://metallb.universe.tf/installation/#preparation
+# kubectl get configmap kube-proxy -n kube-system -o yaml
+# kubectl get configmap kube-proxy -n kube-system -o yaml | \
+# sed -e "s/strictARP: false/strictARP: true/" | \
+# kubectl apply -f - -n kube-system
+# kubectl apply -f common/metallb-native.yaml
 
 
+kubectl apply -f common/local-path-storage.yaml
 
+#https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal-clusters
+kubectl apply -f common/nginx-ingress-controller-bm.yaml
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=120s
+POD_NAMESPACE=ingress-nginx
+POD_NAME=$(kubectl get pods -n $POD_NAMESPACE -l app.kubernetes.io/name=ingress-nginx --field-selector=status.phase=Running -o name)
+kubectl exec $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
 
-# Testing ngnix server
+cd test-apps
+chmod +x helm-apps.sh
+sh helm-apps.sh
+# Test ngnix server
 kubectl apply -f nginx.yaml
+
+kubectl apply -f persistent-pod-local-path.yaml
+
+cd ..
