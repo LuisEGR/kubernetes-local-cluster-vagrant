@@ -90,6 +90,7 @@ The project has the following directory structure:
 The Kubernetes cluster is set up with the following components:
 
 - [Kubernetes](https://kubernetes.io/) v1.30.0
+- [CRI-O](https://cri-o.io/) 1.30.0
 - [Calico](https://www.tigera.io/project-calico/) CNI plugin for networking
 - [Helm](https://helm.sh/) package manager for deploying applications
 - [NGINX Ingress Controller](https://docs.nginx.com/nginx-ingress-controller/) for exposing services
