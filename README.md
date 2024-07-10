@@ -125,9 +125,27 @@ You can customize the cluster configuration by modifying the following files:
 
 Please refer to the individual scripts and configuration files for more details on the specific steps and configurations applied during the provisioning process.
 
+
+
 ## Contributing
 
 If you find any issues or have suggestions for improvements, please feel free to open an issue or submit a pull request on the project's GitHub repository.
+
+Here is a summary of the key tasks and improvements to consider for the CoreOS-based solution:
+
+## To-Do 
+
+Here's a concise to-do list with one checkbox per line using markdown:
+
+- [ ] Create base image from CoreOS
+- [ ] Fix persistent storage
+- [ ] Enable IPv6 support
+- [ ] Make operations idempotent
+- [ ] Set up automated builds and testing
+- [ ] Implement security hardening
+- [ ] Create documentation
+- [ ] Add monitoring and logging
+
 
 ## License
 
