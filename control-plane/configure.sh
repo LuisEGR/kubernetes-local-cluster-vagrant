@@ -1,6 +1,55 @@
 #!/bin/bash
 
 
+echo ">>>>>>>>> Installing Kubernetes"
+# Install kubernetes via kubeadm.
+# kubeadm init --apiserver-advertise-address=$NODE_IP
+
+
+
+# Fixes [ERROR CRI]: container runtime is not running: out...
+# https://github.com/containerd/containerd/issues/4581
+# sudo rm /etc/containerd/config.toml
+# sudo systemctl restart containerd
+
+# sudo kubeadm init \
+# --pod-network-cidr=10.244.0.0/16,2001:db8:42:0::/56 \
+# --service-cidr=10.96.0.0/16,2001:db8:42:1::/112 \
+# # --extra-config=kubelet.cgroup-driver=cgroupfs \
+# --apiserver-advertise-address=$NODE_IP
+
+sed -i "s/LOAD_BALANCER_DNS/$NODE_IP/g" common/kubeadm-config.yaml
+echo ">>>kubeadm-config.yam<<<"
+cat common/kubeadm-config.yaml
+
+kubeadm init --config=common/kubeadm-config.yaml
+# kubeadm init
+echo ">>>>>>>>> preparing kubectl"
+
+
+# Hostname -i must return a routable address on second (non-NATed) network interface.
+# @see http://kubernetes.io/docs/getting-started-guides/kubeadm/#limitations
+# sed "s/127.0.0.1.*m/$NODE_IP m/" -i /etc/hosts
+
+echo ">>>>>>>>> Join file"
+
+
+# Export k8s cluster token to an external file.
+# OUTPUT_FILE=/vagrant/join.sh
+# rm -rf /vagrant/join.sh
+kubeadm token create --print-join-command > /vagrant/join.sh
+sudo chmod +x /vagrant/join.sh
+
+ip addr
+# whoami
+
+# sudo su - vagrant
+# whoami
+
+
+
+
+
 # Prepare kubectl.
 sudo mkdir -p /home/vagrant/.kube
 sudo cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
@@ -127,6 +176,19 @@ echo "Calico pod is ready!"
 # kubectl apply -f common/metallb-native.yaml
 
 
+
+# HELM installation
+# https://helm.sh/docs/intro/install/
+curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+sudo apt-get install apt-transport-https --yes
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+sudo apt-get update
+sudo apt-get install helm
+
+helm --help
+
+
+
 kubectl apply -f common/local-path-storage.yaml
 
 #https://kubernetes.github.io/ingress-nginx/deploy/#bare-metal-clusters
@@ -142,9 +204,14 @@ kubectl exec $POD_NAME -n $POD_NAMESPACE -- /nginx-ingress-controller --version
 cd test-apps
 chmod +x helm-apps.sh
 sh helm-apps.sh
+
+
 # Test ngnix server
 kubectl apply -f nginx.yaml
 
 kubectl apply -f persistent-pod-local-path.yaml
 
 cd ..
+
+
+

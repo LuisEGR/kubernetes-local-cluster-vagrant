@@ -2,39 +2,31 @@
 # vi: set ft=ruby :
 
 Vagrant.configure("2") do |config|
-  # config.vm.synced_folder ".", "/vagrant", type: "smb"
-  config.vm.synced_folder "./shared_drive", "/vagrant", type: "rsync",
-    rsync__exclude: ".git/"
+# config.vm.synced_folder "./shared_drive", "/vagrant", type: "smb", smb_username: ENV['SMB_USERNAME'], smb_password: ENV['SMB_PASSWORD']
 
-  config.vm.define "control-plane" do |web|
-    config.vm.box = "generic/ubuntu2204"
-    # config.vm.network "public_network", 
-    #   bridge: "Public Switch",
-    #   auto_config: false
+    config.vm.define "control-plane" do |web|
+        auto_start_action = "Start"
+        config.vm.box = "generic/ubuntu2204"
+        config.vm.network "public_network", 
+            dhcp: false,
+            bridge: "Public Switch"
 
-    config.vm.network "public_network", 
-      ip: "192.168.2.120", 
-      dhcp: false,
-      bridge: "Public Switch"
+        config.vm.provider "hypervivf" do |vb|
+            vb.maxmemory = "4096"
+            vb.memory = "2048"
+            vb.cpus = "2"
+            vb.auto_start_action = "Start"
+        end
 
-    # default router
-    # config.vm.provision "shell",
-    #   run: "always",
-    #   inline: "route add default gw 192.168.2.1"
+        config.vm.provision "file", source: "../common", destination: "common"
+        config.vm.provision "file", source: "../test-apps", destination: "test-apps"
 
+        config.vm.provision "shell" do |s|
+            s.env = { "HOSTNAME_VG" => "control-plane" }
+            s.path = "../common/install.sh"
+        end
 
-    config.vm.provider "hypervivf" do |vb|
-      # Customize the amount of memory on the VM:
-      vb.maxmemory = "4096"
-      vb.memory = "2048"
-      vb.cpus = "2"
+        config.vm.provision "shell", path: "configure.sh", privileged: false, keep_color: true
     end
-
-    config.vm.provision "file", source: "../common", destination: "common"
-    config.vm.provision "file", source: "../test-apps", destination: "test-apps"
-
-    config.vm.provision "shell", path: "install.sh", keep_color: true
-    config.vm.provision "shell", path: "configure.sh", privileged: false, keep_color: true
-  end
 
 end
