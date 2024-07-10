@@ -1,21 +1,29 @@
 #!/bin/bash
-CONTAINERD_VERSION=1.5.7
-DOCKER_CE_VERSION=5:20.10.9~3-0~ubuntu-$(lsb_release -cs)
-KUBERNETES_VERSION=1.22.2-00
+CONTAINERD_VERSION=1.7.16
+# DOCKER_CE_VERSION=5:26.1.1-1~ubuntu-$(lsb_release -cs)
+# KUBERNETES_VERSION=1.30.0
 
 
 
+echo ">>>>>>>>> Installing prerequisites"
 # Install packages to allow apt to use a repository over HTTPS.
 apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+sudo apt install -y net-tools
 
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+# echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# apt-get update
+# apt-cache madison docker-ce
 
 
-sudo apt-get update
+
+
+
+
+sudo apt-get update --fix-missing
 sudo apt-get install -y systemd
+
 
 # sudo apt-mark hold grub-pc grub-pc-bin grub2-common grub-common
 # sudo apt-get dist-upgrade -y
@@ -23,38 +31,57 @@ sudo apt-get install -y systemd
 
 
 
-echo ">>>>>>>>> Installing Containerd"
-sudo apt-get install libseccomp2
-wget -q https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz
-wget -q https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz.sha256sum
-sha256sum --check cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz.sha256sum
+# echo ">>>>>>>>> Installing Containerd"
+# sudo apt-get install libseccomp2
+# wget -q https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz
+# wget -q https://github.com/containerd/containerd/releases/download/v${CONTAINERD_VERSION}/cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz.sha256sum
+# sha256sum --check cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz.sha256sum
 
-sudo tar --no-overwrite-dir -C / -xzf cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz
-sudo systemctl daemon-reload
-sudo systemctl start containerd
+# sudo tar --no-overwrite-dir -C / -xzf cri-containerd-cni-${CONTAINERD_VERSION}-linux-amd64.tar.gz
+# sudo systemctl daemon-reload
+# sudo systemctl start containerd
 
 
 
-echo ">>>>>>>>> Installing Docker"
-# apt-cache madison containerd.io
-# Install Docker CE.
-apt-get install -y \
-  docker-ce=${DOCKER_CE_VERSION} \
-  docker-ce-cli=${DOCKER_CE_VERSION}
+echo ">>>>>>>>> Installing Docker + Containerd"
 
-# Setup daemon.
-cat > /etc/docker/daemon.json <<EOF
-{
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "100m"
-  },
-  "storage-driver": "overlay2"
-}
-EOF
 
-mkdir -p /etc/systemd/system/docker.service.d
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+
+ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# # apt-cache madison containerd.io
+# # Install Docker CE.
+# apt-get install -y \
+#   docker-ce=${DOCKER_CE_VERSION} \
+#   docker-ce-cli=${DOCKER_CE_VERSION}
+
+# # Setup daemon.
+# cat > /etc/docker/daemon.json <<EOF
+# {
+#   "exec-opts": ["native.cgroupdriver=systemd"],
+#   "log-driver": "json-file",
+#   "log-opts": {
+#     "max-size": "100m"
+#   },
+#   "storage-driver": "overlay2"
+# }
+# EOF
+
+# mkdir -p /etc/systemd/system/docker.service.d
 
 # # Restart and enable docker service.
 systemctl daemon-reload
@@ -73,12 +100,9 @@ sudo usermod -a -G docker vagrant # add vagrant user to docker group
 
 
 # Add Kubernetes apt repository.
-
-## Download the Google Cloud public signing key
-curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
-
-## Add the Kubernetes apt repository
-echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
 ## Update apt package index with the new repository
 apt-get update
@@ -86,24 +110,23 @@ apt-get update
 # Install kubelet, kubeadm and kubectl.
 # apt-cache madison kubelet
 
-apt-get install -y kubelet=${KUBERNETES_VERSION} kubectl=${KUBERNETES_VERSION} kubeadm=${KUBERNETES_VERSION}
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
+sudo systemctl enable --now kubelet
 
-# Hold the Kubernetes components at this specific version.
-apt-mark hold kubelet kubeadm kubectl
-
-# Turn off swap for kubeadm.
-swapoff -a
-sed -i '/swap/d' /etc/fstab
-
+# # Turn off swap for kubeadm.
+sudo swapoff -a
+sudo sed -i '/swap/d' /etc/fstab
 
 
 
 
-# # Clear apt cache.
-# apt-get clean
+
+# Clear apt cache.
+sudo apt-get clean
 
 
-# # Clear bash history.
+# Clear bash history.
 # cat /dev/null > ~/.bash_history && history -c && exit
 
 
@@ -128,25 +151,21 @@ echo ">>>>>>>>> Installing Kubernetes"
 # kubeadm init --apiserver-advertise-address=$NODE_IP
 
 
+
+# Fixes [ERROR CRI]: container runtime is not running: out...
+# https://github.com/containerd/containerd/issues/4581
+sudo rm /etc/containerd/config.toml
+sudo systemctl restart containerd
+
 # sudo kubeadm init \
 # --pod-network-cidr=10.244.0.0/16,2001:db8:42:0::/56 \
 # --service-cidr=10.96.0.0/16,2001:db8:42:1::/112 \
 # # --extra-config=kubelet.cgroup-driver=cgroupfs \
 # --apiserver-advertise-address=$NODE_IP
 
-
-
-kubeadm init --config=kubeadm-config.yaml
-
-
+# kubeadm init --config=kubeadm-config.yaml
+kubeadm init
 echo ">>>>>>>>> preparing kubectl"
-
-
-# # Prepare kubectl.
-# sudo mkdir -p $HOME/.kube
-# sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-# sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
 
 
 # Hostname -i must return a routable address on second (non-NATed) network interface.
@@ -160,14 +179,10 @@ echo ">>>>>>>>> Join file"
 # OUTPUT_FILE=/vagrant/join.sh
 # rm -rf /vagrant/join.sh
 kubeadm token create --print-join-command > /vagrant/join.sh
-sudo chmod +x vagrant/join.sh
+sudo chmod +x /vagrant/join.sh
 
 ip addr
 # whoami
 
 # sudo su - vagrant
 # whoami
-
-# echo "HOME:::::::"$HOME
-sudo apt install net-tools
-
