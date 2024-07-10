@@ -32,6 +32,8 @@ spec:
       labels:
         app: nexus
     spec:
+      securityContext:
+        fsGroup: 200
       containers:
       - name: nexus
         image: sonatype/nexus3

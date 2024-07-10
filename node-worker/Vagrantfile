@@ -1,0 +1,43 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+    (1..2).each do |i|
+        config.vm.define "node-worker-#{i}" do |node|
+            node.vm.box = "generic/ubuntu2204"
+        
+            node.vm.network "public_network", 
+                bridge: "Public Switch"
+            
+            node.vm.provider "hyperv" do |vb|
+                vb.maxmemory = "8192"
+                vb.memory = "6096"
+                vb.cpus = "4"
+                vb.auto_start_action = "Start"
+            end
+
+            node.vm.hostname = "node-worker-#{i}"
+            node.vm.provision "file", source: "../common", destination: "common"
+            node.vm.provision "file", source: "kube_config.yaml", destination: "kube_config.yaml"
+            node.vm.provision "shell" do |s|
+                s.env = { "HOSTNAME_VG" => "node-worker-#{i}" }
+                s.inline = <<-SHELL
+                    hostname -I
+                    cat /etc/hosts
+                    NODE_IP=$(hostname -I | cut -d' ' -f1)
+                    echo ">>>>>>>> Updating /etc/host"
+                    sed -i "/${HOSTNAME_VG}/d" /etc/hosts
+                    sed -i "/ubuntu2204.localdomain/d" /etc/hosts                        
+                    echo "127.0.0.1 ${HOSTNAME_VG}" >> /etc/hosts
+                    echo "${NODE_IP} ${HOSTNAME_VG}" >> /etc/hosts
+                    cat /etc/hosts
+                SHELL
+            end
+        
+            node.vm.provision "shell", path: "../common/install.sh", privileged: true, keep_color: true
+            node.vm.provision "shell", path: "join.sh", privileged: true, keep_color: true
+            node.vm.provision "shell", path: "configure.sh", privileged: false, keep_color: true
+        end
+    end
+end
+  

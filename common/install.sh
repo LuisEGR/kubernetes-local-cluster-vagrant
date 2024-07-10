@@ -15,6 +15,13 @@ yes|sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master
 # echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 # apt-get update
 # apt-cache madison docker-ce
+sudo chsh -s /bin/zsh vagrant
+zsh
+
+
+sudo apt install snapd
+sudo snap install k9s
+sudo ln -s /snap/k9s/current/bin/k9s /snap/bin/
 
 
 kubectl completion zsh >> ~/.zshrc
@@ -23,6 +30,8 @@ kubectl completion zsh >> ~/.zshrc
 
 sudo apt-get update --fix-missing
 sudo apt-get install -y systemd
+sudo apt-get install -y cifs-utils
+
 
 
 # sudo apt-mark hold grub-pc grub-pc-bin grub2-common grub-common
@@ -209,70 +218,17 @@ sudo apt-get clean
 
 # sudo sysctl -w net.ipv6.conf.all.forwarding=1
 
-NODE_IP=$(hostname -I | cut -d' ' -f1)
-# sudo sed "s/127.0.0.1.*m/$NODE_IP m/" -i /etc/hosts
-echo "${NODE_IP} control-plane" >> /etc/hosts
-echo "control-plane" > /etc/hostname
-hostnamectl set-hostname control-plane
+# NODE_IP=$(hostname -I | cut -d' ' -f1)
+# echo ">>>>>>>> Current hosts"
+# cat /etc/hosts
+# # sudo sed "s/127.0.0.1.*m/$NODE_IP m/" -i /etc/hosts
+# echo "${NODE_IP} ${HOSTNAME_VG}" >> /etc/hosts
+# # echo "control-plane" > /etc/hostname
+# hostnamectl set-hostname ${HOSTNAME_VG}
 
-echo "IP::::"$NODE_IP
-hostname -i
-hostname
-
-echo ">>>>>>>>> Installing Kubernetes"
-# Install kubernetes via kubeadm.
-# kubeadm init --apiserver-advertise-address=$NODE_IP
+# echo "IP::::"$NODE_IP
+# hostname -i
+# hostname
 
 
 
-# Fixes [ERROR CRI]: container runtime is not running: out...
-# https://github.com/containerd/containerd/issues/4581
-# sudo rm /etc/containerd/config.toml
-# sudo systemctl restart containerd
-
-# sudo kubeadm init \
-# --pod-network-cidr=10.244.0.0/16,2001:db8:42:0::/56 \
-# --service-cidr=10.96.0.0/16,2001:db8:42:1::/112 \
-# # --extra-config=kubelet.cgroup-driver=cgroupfs \
-# --apiserver-advertise-address=$NODE_IP
-
-
-
-sed -i "s/LOAD_BALANCER_DNS/$NODE_IP/g" common/kubeadm-config.yaml
-echo ">>>kubeadm-config.yam<<<"
-cat common/kubeadm-config.yaml
-
-kubeadm init --config=common/kubeadm-config.yaml
-# kubeadm init
-echo ">>>>>>>>> preparing kubectl"
-
-
-# Hostname -i must return a routable address on second (non-NATed) network interface.
-# @see http://kubernetes.io/docs/getting-started-guides/kubeadm/#limitations
-# sed "s/127.0.0.1.*m/$NODE_IP m/" -i /etc/hosts
-
-echo ">>>>>>>>> Join file"
-
-
-# Export k8s cluster token to an external file.
-# OUTPUT_FILE=/vagrant/join.sh
-# rm -rf /vagrant/join.sh
-kubeadm token create --print-join-command > /vagrant/join.sh
-sudo chmod +x /vagrant/join.sh
-
-ip addr
-# whoami
-
-# sudo su - vagrant
-# whoami
-
-
-# HELM installation
-# https://helm.sh/docs/intro/install/
-curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
-sudo apt-get install apt-transport-https --yes
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
-sudo apt-get update
-sudo apt-get install helm
-
-helm --help

@@ -1,3 +1,4 @@
 .vagrant
 kube_config.yaml
 control-plane/vagrant_up_*
+join.sh
