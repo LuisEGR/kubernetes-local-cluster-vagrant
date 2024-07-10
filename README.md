@@ -151,3 +151,5 @@ Here's a concise to-do list with one checkbox per line using markdown:
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/luisgz)
